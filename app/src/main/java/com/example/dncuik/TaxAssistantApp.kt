@@ -28,6 +28,7 @@ class TaxAssistantApp : Application() {
             val notificationManager: NotificationManager =
                 getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             notificationManager.createNotificationChannel(channel)
+            // Base application class with DI setup
         }
     }
 }
