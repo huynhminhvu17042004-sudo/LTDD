@@ -45,6 +45,6 @@ object AppModule {
     @Singleton
     fun provideExchangeRateService(retrofit: Retrofit): ExchangeRateService {
         return retrofit.create(ExchangeRateService::class.java)
-        // Dependency injection setup
+        // di update
     }
 }
