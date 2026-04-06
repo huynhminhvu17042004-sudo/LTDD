@@ -78,7 +78,7 @@ class TextRecognitionAnalyzer(
                 .addOnCompleteListener {
                     imageProxy.close()
                 }
-        } else {
+        } else  {
             imageProxy.close()
         }
     }
