@@ -1,0 +1,21 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Nền trắng tròn nhẹ -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M54,54m-35,0a35,35 0,1 1,70 0a35,35 0,1 1,-70 0" />
+    <!-- Thân máy tính -->
+    <path
+        android:fillColor="#1976D2"
+        android:pathData="M35,35h38v38h-38z M39,39h30v8h-30z M39,51h6v6h-6z M51,51h6v6h-6z M63,51h6v6h-6z M39,63h6v6h-6z M51,63h6v6h-6z M63,63h6v6h-6z" />
+    <!-- Ký hiệu tiền tệ -->
+    <path
+        android:fillColor="#2E7D32"
+        android:pathData="M70,30c0,5 -4,9 -9,9s-9,-4 -9,-9s4,-9 9,-9s9,4 9,9z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M61,25v10 M58,28h6 M58,32h6" />
+</vector>

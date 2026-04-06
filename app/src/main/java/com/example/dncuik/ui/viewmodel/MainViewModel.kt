@@ -1,0 +1,107 @@
+package com.example.dncuik.ui.viewmodel
+
+import android.content.Context
+import android.content.Intent
+import androidx.core.content.FileProvider
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.dncuik.data.IncomeEntity
+import com.example.dncuik.repository.IncomeRepository
+import com.example.dncuik.tax.TaxEngine
+import com.example.dncuik.tax.TaxProfile
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
+import java.io.File
+import javax.inject.Inject
+
+@HiltViewModel
+class MainViewModel @Inject constructor(
+    private val repository: IncomeRepository
+) : ViewModel() {
+
+    private val taxEngine = TaxEngine()
+    
+    val incomeHistory = repository.allIncomes.stateIn(
+        viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList()
+    )
+
+    private val _rates = MutableStateFlow<Map<String, Double>>(emptyMap())
+    val rates: StateFlow<Map<String, Double>> = _rates
+
+    private val _editingIncome = MutableStateFlow<IncomeEntity?>(null)
+    val editingIncome = _editingIncome.asStateFlow()
+
+    init {
+        fetchRates()
+    }
+
+    fun fetchRates() {
+        viewModelScope.launch {
+            _rates.value = repository.getExchangeRates()
+        }
+    }
+
+    fun addIncome(amount: Double, sourceName: String, type: String, dependents: Int) {
+        viewModelScope.launch {
+            val res = taxEngine.calculate(amount, TaxProfile(), dependents, type)
+            val currentEditing = _editingIncome.value
+            
+            val entity = IncomeEntity(
+                id = currentEditing?.id ?: 0,
+                amount = amount,
+                sourceName = sourceName,
+                sourceType = type,
+                dependents = dependents,
+                insuranceAmount = res.insurance,
+                taxableIncome = res.taxableIncome,
+                taxAmount = res.taxAmount,
+                netAmount = res.net,
+                timestamp = currentEditing?.timestamp ?: System.currentTimeMillis()
+            )
+            repository.insertIncome(entity)
+            _editingIncome.value = null
+        }
+    }
+
+    fun deleteIncome(income: IncomeEntity) {
+        viewModelScope.launch {
+            repository.deleteIncome(income)
+        }
+    }
+
+    fun setEditingIncome(income: IncomeEntity?) {
+        _editingIncome.value = income
+    }
+
+    fun exportToExcel(context: Context) {
+        val data = incomeHistory.value
+        if (data.isEmpty()) return
+
+        val fileName = "BaoCaoThuNhap.csv"
+        val file = File(context.filesDir, fileName)
+        val header = "Ten nguon,Loai,So tien,Thue,Thuc nhan\n"
+        val content = StringBuilder(header)
+        
+        data.forEach {
+            content.append("${it.sourceName},${it.sourceType},${it.amount},${it.taxAmount},${it.netAmount}\n")
+        }
+
+        try {
+            file.writeText(content.toString())
+            val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
+            val intent = Intent(Intent.ACTION_SEND).apply {
+                type = "text/csv"
+                putExtra(Intent.EXTRA_STREAM, uri)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+            context.startActivity(Intent.createChooser(intent, "Chia sẻ báo cáo qua..."))
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+}
