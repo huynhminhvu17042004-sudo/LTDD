@@ -33,7 +33,7 @@
 
         <provider
             android:name="androidx.core.content.FileProvider"
-            android:authorities="com.example.dncuik.fileprovider"
+            android:authorities="com.example.laptrinhdidong.fileprovider"
             android:exported="false"
             android:grantUriPermissions="true">
             <meta-data
