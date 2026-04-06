@@ -101,6 +101,7 @@ fun CameraScreen(onResult: (Double, String, String) -> Unit, onClose: () -> Unit
                 }
             }
             Spacer(Modifier.height(16.dp))
+
             IconButton(
                 onClick = onClose,
                 modifier = Modifier.size(48.dp),
