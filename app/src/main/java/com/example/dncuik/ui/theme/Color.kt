@@ -14,4 +14,4 @@ val Pink40 = Color(0xFF7D5260)
 val PrimaryBlue = Color(0xFF1976D2)
 val SecondaryBlue = Color(0xFFE3F2FD)
 val SuccessGreen = Color(0xFF2E7D32)
-val ErrorRed = Color(0xFFD32F2F)
+val ErrorRed = Color(0xFFD32F2F) // Final color update
