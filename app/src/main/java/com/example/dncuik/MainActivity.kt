@@ -16,6 +16,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.dncuik.ui.screens.IncomeHistoryScreen
+import com.example.dncuik.ui.screens.LoginScreen
 import com.example.dncuik.ui.screens.TaxCalculatorScreen
 import com.example.dncuik.ui.theme.DựÁnCuốiKìTheme
 import com.example.dncuik.ui.theme.PrimaryBlue
@@ -41,14 +42,22 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             DựÁnCuốiKìTheme {
-                MainScreen()
+                val viewModel: MainViewModel = hiltViewModel()
+                val isLoggedIn by viewModel.loginState.collectAsState()
+
+                if (!isLoggedIn) {
+                    LoginScreen(onLoginSuccess = { /* Handle login */ })
+                } else {
+                    MainScreen(viewModel)
+                }
             }
         }
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreen(viewModel: MainViewModel = hiltViewModel()) {
+fun MainScreen(viewModel: MainViewModel) {
     var selectedTab by remember { mutableIntStateOf(0) }
     val editingIncome by viewModel.editingIncome.collectAsState()
 
@@ -57,6 +66,19 @@ fun MainScreen(viewModel: MainViewModel = hiltViewModel()) {
     }
     
     Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Trợ lý Thuế") },
+                actions = {
+                    IconButton(onClick = { viewModel.logout() }) {
+                        Icon(Icons.Default.Logout, contentDescription = "Đăng xuất")
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.White
+                )
+            )
+        },
         bottomBar = {
             NavigationBar(
                 containerColor = Color.White,

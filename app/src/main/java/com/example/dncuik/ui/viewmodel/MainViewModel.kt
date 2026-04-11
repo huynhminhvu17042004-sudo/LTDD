@@ -6,7 +6,9 @@ import androidx.core.content.FileProvider
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.dncuik.data.IncomeEntity
+import com.example.dncuik.data.UserEntity
 import com.example.dncuik.repository.IncomeRepository
+import com.example.dncuik.repository.UserRepository
 import com.example.dncuik.tax.TaxEngine
 import com.example.dncuik.tax.TaxProfile
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -21,7 +23,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
-    private val repository: IncomeRepository
+    private val repository: IncomeRepository,
+    private val userRepository: UserRepository
 ) : ViewModel() {
 
     private val taxEngine = TaxEngine()
@@ -36,8 +39,57 @@ class MainViewModel @Inject constructor(
     private val _editingIncome = MutableStateFlow<IncomeEntity?>(null)
     val editingIncome = _editingIncome.asStateFlow()
 
+    private val _loginState = MutableStateFlow(false)
+    val loginState = _loginState.asStateFlow()
+
     init {
         fetchRates()
+    }
+
+    fun login(username: String, password: String, onResult: (Boolean, String) -> Unit) {
+        if (username.isBlank() || password.isBlank()) {
+            onResult(false, "Vui lòng điền đầy đủ thông tin")
+            return
+        }
+        viewModelScope.launch {
+            val user = userRepository.getUserByUsername(username)
+            if (user != null && user.password == password) {
+                _loginState.value = true
+                onResult(true, "Đăng nhập thành công")
+            } else {
+                onResult(false, "Sai tên đăng nhập hoặc mật khẩu")
+            }
+        }
+    }
+
+    fun register(username: String, password: String, onResult: (Boolean, String) -> Unit) {
+        if (username.isBlank() || password.isBlank()) {
+            onResult(false, "Vui lòng nhập đầy đủ thông tin")
+            return
+        }
+        if (password.length < 8) {
+            onResult(false, "Mật khẩu phải có ít nhất 8 ký tự")
+            return
+        }
+        // Kiểm tra tính phức tạp: ít nhất 1 chữ cái và 1 con số
+        val passwordRegex = "^(?=.*[A-Za-z])(?=.*\\d).{8,}$".toRegex()
+        if (!password.matches(passwordRegex)) {
+            onResult(false, "Mật khẩu cần bao gồm cả chữ và số")
+            return
+        }
+
+        viewModelScope.launch {
+            try {
+                userRepository.registerUser(UserEntity(username, password))
+                onResult(true, "Đăng ký thành công")
+            } catch (e: Exception) {
+                onResult(false, "Tên đăng nhập đã tồn tại")
+            }
+        }
+    }
+
+    fun logout() {
+        _loginState.value = false
     }
 
     fun fetchRates() {

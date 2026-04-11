@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Room
 import com.example.dncuik.data.AppDatabase
 import com.example.dncuik.data.IncomeDao
+import com.example.dncuik.data.UserDao
 import com.example.dncuik.network.ExchangeRateService
 import dagger.Module
 import dagger.Provides
@@ -33,6 +34,9 @@ object AppModule {
     fun provideIncomeDao(db: AppDatabase): IncomeDao = db.incomeDao()
 
     @Provides
+    fun provideUserDao(db: AppDatabase): UserDao = db.userDao()
+
+    @Provides
     @Singleton
     fun provideRetrofit(): Retrofit {
         return Retrofit.Builder()
@@ -45,6 +49,5 @@ object AppModule {
     @Singleton
     fun provideExchangeRateService(retrofit: Retrofit): ExchangeRateService {
         return retrofit.create(ExchangeRateService::class.java)
-        // di update
     }
 }
