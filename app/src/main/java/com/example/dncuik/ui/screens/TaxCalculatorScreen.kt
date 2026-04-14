@@ -1,5 +1,8 @@
 package com.example.dncuik.ui.screens
 
+import android.content.Context
+import android.content.Intent
+import android.provider.Settings
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -20,6 +23,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.app.NotificationCompat
+import android.app.NotificationManager
 import com.example.dncuik.ui.theme.PrimaryBlue
 import com.example.dncuik.ui.theme.SecondaryBlue
 import com.example.dncuik.ui.theme.SuccessGreen
@@ -102,7 +107,7 @@ fun TaxCalculatorScreen(viewModel: MainViewModel) {
             }
         }
 
-        // Exchange Rates Card (More modern look)
+        // Exchange Rates Card
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(20.dp),
@@ -231,16 +236,43 @@ fun TaxCalculatorScreen(viewModel: MainViewModel) {
             )
         }
 
-        // Mock Button (Optional - moved to bottom)
+        // Mock Button (Restored and styled)
         TextButton(
             onClick = {
-                // ... (Logic mô phỏng giữ nguyên)
+                val isListenerEnabled = Settings.Secure.getString(context.contentResolver, "enabled_notification_listeners")?.contains(context.packageName) == true
+                if (!isListenerEnabled) {
+                    context.startActivity(Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS"))
+                } else {
+                    val inputAmount = amount.toDoubleOrNull() ?: 5000000.0
+                    val inputDeps = dependents.toIntOrNull() ?: 0
+                    val taxEngine = com.example.dncuik.tax.TaxEngine()
+                    val taxResult = taxEngine.calculate(inputAmount, com.example.dncuik.tax.TaxProfile(), inputDeps, type)
+                    
+                    val locale = java.util.Locale.getDefault()
+                    val formattedAmount = String.format(locale, "%,.0f", inputAmount)
+                    val formattedNet = String.format(locale, "%,.0f", taxResult.net)
+                    val mockBalance = String.format(locale, "%,.0f", 50000000.0 + taxResult.net)
+                    
+                    val testText = "VCB +$formattedAmount. Thuc nhan: +$formattedNet. So du: $mockBalance VND"
+
+                    val notification = NotificationCompat.Builder(context, "BANK_ALERTS")
+                        .setSmallIcon(android.R.drawable.ic_dialog_info)
+                        .setContentTitle("Vietcombank (Mô phỏng)")
+                        .setContentText(testText)
+                        .setPriority(NotificationCompat.PRIORITY_HIGH)
+                        .setDefaults(NotificationCompat.DEFAULT_ALL)
+                        .setAutoCancel(true)
+                        .build()
+                    
+                    val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                    notificationManager.notify(999, notification)
+                }
             },
             modifier = Modifier.align(Alignment.CenterHorizontally)
         ) {
-            Icon(Icons.Default.NotificationsActive, null, modifier = Modifier.size(18.dp))
+            Icon(Icons.Default.NotificationsActive, null, modifier = Modifier.size(18.dp), tint = PrimaryBlue)
             Spacer(Modifier.width(8.dp))
-            Text("Thử nghiệm thông báo ngân hàng")
+            Text("Thử nghiệm thông báo ngân hàng", color = PrimaryBlue, fontWeight = FontWeight.Medium)
         }
     }
 }
